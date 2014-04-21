@@ -74,7 +74,11 @@ grunt.initConfig({
 ```
 
 #### Other Options
-In this example, the default options are used to do stamp the files with md5sum. New versionified files will be generated such as 'js/my.script.min.{md5sum}{gitRevID}.js' and 'css/my.styles.min.{md5sum}{gitRevID}.css', and old filename will be replaced with new ones 'my.script.min.js' => 'js/my.script.min.{md5sum}{gitRevID}.js'  and 'my.styles.min.css' => 'css/my.styles.min.{md5sum}{gitRevID}.css'
+In this example, the default options are used to do stamp the files with md5sum. New versionified files will be generated such as **'js/my.script.min.{md5sum}{gitRevID}.js'** and **'css/my.styles.min.{md5sum}{gitRevID}.css'**. 
+
+Old filenames in 'index.php' will be replaced with new ones ;
+  '**my.script.min.js**' => '**js/my.script.min.{md5sum}{gitRevID}.js**'  
+  '**my.styles.min.css**' => '**css/my.styles.min.{md5sum}{gitRevID}.css**'
 
 ```js
 grunt.initConfig({
@@ -90,6 +94,8 @@ grunt.initConfig({
   },
 });
 ```
+
+Task submitted by [Ertugrul Emre Ertekin](http://github.com/eeertekin)
 
 ## Release History
 * 2014-04-22   v0.1.0   First Release with Git, MD5 and destination replace features
