@@ -1,7 +1,7 @@
 {
   "name": "grunt-versionify",
   "description": "Version stamp for your files with GIT/MD5",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/eeertekin/grunt-versionify",
   "author": {
     "name": "Ertugrul Emre Ertekin",
