@@ -37,53 +37,59 @@ grunt.initConfig({
 
 ### Options
 
-#### options.separator
-Type: `String`
-Default value: `',  '`
+#### options.md5
+Type: `Boolean`
+Default value: `true`
 
-A string value that is used to do something with whatever.
+Use first 6 chars of file's md5 sum (e.g. 24eee5)
 
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
+#### options.git
+Type: `Boolean`
+Default value: `false`
 
-A string value that is used to do something else with whatever else.
+Use first 6 chars of file's git revision (e.g. b78524)
+
+#### options.replaceDest
+Type: `Boolean`
+Default value: `false`
+
+Replace old filepaths with new versionified ones
+
+It's very useful to automate the changes when versionified files are called in another file.
 
 ### Usage Examples
 
 #### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
+In this example, the default options are used to do stamp the files with md5sum. New versionified files will be generated such as js/my.script.min.{md5sum}.js and 'css/my.styles.min.{md5sum}.css'
 
 ```js
 grunt.initConfig({
   versionify: {
     options: {},
     files: {
-      'dest/default_options': ['src/testing', 'src/123'],
+      'index.php': ['js/my.script.min.js','css/my.styles.min.css']
     },
   },
 });
 ```
 
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
+#### Other Options
+In this example, the default options are used to do stamp the files with md5sum. New versionified files will be generated such as 'js/my.script.min.{md5sum}{gitRevID}.js' and 'css/my.styles.min.{md5sum}{gitRevID}.css', and old filename will be replaced with new ones 'my.script.min.js' => 'js/my.script.min.{md5sum}{gitRevID}.js'  and 'my.styles.min.css' => 'css/my.styles.min.{md5sum}{gitRevID}.css'
 
 ```js
 grunt.initConfig({
   versionify: {
     options: {
-      separator: ': ',
-      punctuation: ' !!!',
+      git : true,
+      md5 : true,
+      replaceDest : true
     },
     files: {
-      'dest/default_options': ['src/testing', 'src/123'],
+      'index.php': ['my.script.min.js','my.styles.min.css']
     },
   },
 });
 ```
 
-## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
-
 ## Release History
-_(Nothing yet)_
+* 2014-04-22   v0.1.0   First Release with Git, MD5 and destination replace features
