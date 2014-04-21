@@ -11,15 +11,22 @@
 var path = require('path'),
     shell = require('shelljs/global');
 
+
 module.exports = function(grunt) {
 
   var getMD5Sum = function(buf, shortVersion) {
-    var md5 = require("MD5"),
-        md5sum = md5(grunt.file.read(buf));
-    if (shortVersion) {
-      return md5sum.substr(0,6);
+
+    try {
+      var md5 = require("MD5"),
+          md5sum = md5(grunt.file.read(buf));
+      if (shortVersion) {
+        return md5sum.substr(0,6);
+      }
+      return md5sum;
+    } catch(e) {
+      return "NA";
     }
-    return md5sum;
+    
   };
 
   var getGitRevID = function(filepath, shortVersion) {
