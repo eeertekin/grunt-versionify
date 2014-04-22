@@ -43,17 +43,17 @@ module.exports = function(grunt) {
         newFilePath = path.join( directory, newFileName );
 
     grunt.file.copy(filepath, newFilePath );
-    grunt.log.ok(newFilePath + " created");
+    var status = newFilePath + " created";
 
     if(fileMeta.dest) {
         var replaceFile = grunt.file.read(fileMeta.dest);
         var newDestFile = replaceFile.replace(filepath, newFilePath);
         grunt.file.write(fileMeta.dest, newDestFile);
-        grunt.log.writeln('Versionified files replaced in '+ fileMeta.dest);
+        status += ", "+ fileMeta.dest + " updated"
     }
+    grunt.log.ok(status);
 
-    cb();
-
+    cb(null);
   };
 
   var getMD5Sum = function(filepath, cb) {
