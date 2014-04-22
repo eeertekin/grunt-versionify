@@ -9,27 +9,69 @@
 'use strict';
 
 var path = require('path'),
-    shell = require('shelljs/global');
+    shell = require('shelljs/global'),
+    async = require('async'),
+    crypto = require('crypto'),
+    fs = require('fs');
 
 
 module.exports = function(grunt) {
-
-  var getMD5Sum = function(buf, shortVersion) {
-
-    try {
-      var md5 = require("MD5"),
-          md5sum = md5(grunt.file.read(buf));
-      if (shortVersion) {
-        return md5sum.substr(0,6);
-      }
-      return md5sum;
-    } catch(e) {
-      return "NA";
-    }
-    
+  var taskCount;
+  
+  var doneTask = function(cb) {
+    if(!--taskCount) cb();
   };
 
-  var getGitRevID = function(filepath, shortVersion) {
+  var createVersionFile = function(fileMeta, cb) {
+
+    var filepath = Object.keys(fileMeta)[0],
+      directory = path.dirname(filepath),
+      file = path.basename(filepath),
+      fileExt = path.extname(file),
+      versionStamp = [];
+  
+    if(fileMeta[filepath]['gitsum']) {
+      versionStamp.push(fileMeta[filepath]['gitsum'].substr(0,6));
+    }
+
+    if(fileMeta[filepath]['md5sum']) {
+      versionStamp.push(fileMeta[filepath]['md5sum'].substr(0,6));
+    }
+    versionStamp = versionStamp.join(".");
+        
+    var newFileName = path.basename(file,fileExt) + "." + versionStamp + fileExt,
+        newFilePath = path.join( directory, newFileName );
+
+    grunt.file.copy(filepath, newFilePath );
+    grunt.log.ok(newFilePath + " created");
+
+    if(fileMeta.dest) {
+        var replaceFile = grunt.file.read(fileMeta.dest);
+        var newDestFile = replaceFile.replace(filepath, newFilePath);
+        grunt.file.write(fileMeta.dest, newDestFile);
+        grunt.log.writeln('Versionified files replaced in '+ fileMeta.dest);
+    }
+
+    cb();
+
+  };
+
+  var getMD5Sum = function(filepath, cb) {
+    var md5 = crypto.createHash('md5');
+
+    var s = fs.ReadStream(filepath);
+    s.on('data', function(d) {
+      md5.update(d);
+    });
+
+    s.on('end', function() {
+      var md5sum = md5.digest('hex');
+      cb(null,md5sum)
+    });
+  };
+
+
+  var getGitRevID = function(filepath, cb) {
     if (!which('git')) {
       grunt.fail.warn('This feature requires git');
     }
@@ -47,13 +89,14 @@ module.exports = function(grunt) {
         revID = revData[2];
       }
     }
-    if(shortVersion) {
-      revID = revID.substr(0,6);
-    }
-    return revID;
+
+    cb(null,revID)
   };
 
   grunt.registerMultiTask('versionify', 'Version stamp for your files with GIT/MD5', function() {
+    // Async task
+    var done = this.async();
+
     // Merge task-specific and/or target-specific options with these defaults.
     var options = this.options({
       git : false,
@@ -61,6 +104,8 @@ module.exports = function(grunt) {
       replaceDest : false
     });
     
+    taskCount = this.files.length;
+
     // Iterate over all specified file groups.
     this.files.forEach(function(f) {
       if(options.replaceDest) {
@@ -70,7 +115,7 @@ module.exports = function(grunt) {
       }
 
       // Check if file(s) are exists
-      var newFiles = f.src.filter(function(filepath) {
+      var files = f.src.filter(function(filepath) {
         // Warn on and remove invalid source files (if nonull was set).
         if (!grunt.file.exists(filepath)) {
           grunt.log.warn('Source file "' + filepath + '" not found.');
@@ -78,36 +123,55 @@ module.exports = function(grunt) {
         } else {
           return true;
         }
-      }).map(function(filepath) {
-        var directory = path.dirname(filepath),
-            file = path.basename(filepath),
-            fileExt = path.extname(file),
-            versionID = "";
-
-        if (options.md5) {
-          versionID += getMD5Sum(filepath, true);
-        }
-
-        if (options.git) {
-          versionID += getGitRevID(filepath,true);
-        }
-            
-        var newFileName = path.basename(file,fileExt) + "." + versionID + fileExt,
-            newFilePath = path.join( directory, newFileName );
-
-        grunt.file.copy(filepath, newFilePath );
-        grunt.log.ok(newFilePath + " created");
-
-        if(options.replaceDest) {
-          var replaceFile = grunt.file.read(f.dest);
-          var newDestFile = replaceFile.replace(filepath, newFilePath);
-          grunt.file.write(f.dest, newDestFile);
-          grunt.log.writeln('Versionified files replaced in '+ f.dest);
-        }
-
       });
 
+      async.map(files, function( file, callback) {
+
+          if (options.md5 && options.git) {
+            grunt.log.debug(file + " # GIT and MD5 sums");
+
+            async.parallel({  md5sum : function(cb) { getMD5Sum(file,cb); },
+                              gitsum : function(cb) { getGitRevID(file,cb); } }, 
+              function(err, data){
+                grunt.log.debug(file + " # GIT and MD5 sums", data);
+                var val = {};
+                val[file] = data;
+                callback(null,val);
+              }
+            )
+          } else if(options.md5) {
+            grunt.log.debug(file + " # MD5 only");
+            getMD5Sum(file,function(err,data){
+              var val = {};
+              val[file] = {md5sum : data};
+              callback(err,val);
+            });
+          } else if(options.git) {
+            grunt.log.debug(file + " # GIT only");
+            getGitRevID(file,function(err,data){
+              var val = {};
+              val[file] = {gitsum : data};
+              callback(err,val);
+            });
+          }
+        }, function(err,filesMeta){
+            if( err ) {
+              console.log(err);
+              done(false);
+            } else {
+              async.each(filesMeta, function(file,cb){
+                  if(options.replaceDest) {
+                    file.dest = f.dest 
+                  }
+                  createVersionFile(file, cb);
+                },
+                function(err){
+                  if (err) grunt.fail.warn("Fatal error ", err);
+                  doneTask(done);
+                }
+              )
+            }
+        });
     });
   });
-
 };
