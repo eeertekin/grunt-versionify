@@ -1,7 +1,7 @@
 {
   "name": "grunt-versionify",
   "description": "Version stamp for your files with GIT/MD5",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "homepage": "https://github.com/eeertekin/grunt-versionify",
   "author": {
     "name": "Ertugrul Emre Ertekin",
@@ -36,10 +36,16 @@
     "grunt": "~0.4.4"
   },
   "keywords": [
-    "version","static files","versionify","md5","git","revision ID","gruntplugin"
+    "version",
+    "static files",
+    "versionify",
+    "md5",
+    "git",
+    "revision ID",
+    "gruntplugin"
   ],
   "dependencies": {
     "shelljs": "^0.2.6",
-    "MD5": "^1.2.1"
+    "async": "^0.7.0"
   }
 }
