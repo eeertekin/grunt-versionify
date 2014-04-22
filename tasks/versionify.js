@@ -16,6 +16,45 @@ var path = require('path'),
 
 
 module.exports = function(grunt) {
+  var taskCount;
+  
+  var doneTask = function(cb) {
+    if(!--taskCount) cb();
+  };
+
+  var createVersionFile = function(fileMeta, cb) {
+
+    var filepath = Object.keys(fileMeta)[0],
+      directory = path.dirname(filepath),
+      file = path.basename(filepath),
+      fileExt = path.extname(file),
+      versionStamp = [];
+  
+    if(fileMeta[filepath]['gitsum']) {
+      versionStamp.push(fileMeta[filepath]['gitsum'].substr(0,6));
+    }
+
+    if(fileMeta[filepath]['md5sum']) {
+      versionStamp.push(fileMeta[filepath]['md5sum'].substr(0,6));
+    }
+    versionStamp = versionStamp.join(".");
+        
+    var newFileName = path.basename(file,fileExt) + "." + versionStamp + fileExt,
+        newFilePath = path.join( directory, newFileName );
+
+    grunt.file.copy(filepath, newFilePath );
+    grunt.log.ok(newFilePath + " created");
+
+    if(fileMeta.dest) {
+        var replaceFile = grunt.file.read(fileMeta.dest);
+        var newDestFile = replaceFile.replace(filepath, newFilePath);
+        grunt.file.write(fileMeta.dest, newDestFile);
+        grunt.log.writeln('Versionified files replaced in '+ fileMeta.dest);
+    }
+
+    cb();
+
+  };
 
   var getMD5Sum = function(filepath, cb) {
     var md5 = crypto.createHash('md5');
@@ -27,7 +66,7 @@ module.exports = function(grunt) {
 
     s.on('end', function() {
       var md5sum = md5.digest('hex');
-      cb(null,{md5sum:md5sum})
+      cb(null,md5sum)
     });
   };
 
@@ -51,8 +90,7 @@ module.exports = function(grunt) {
       }
     }
 
-    console.log(filepath + " getting GIT revID");
-    cb(null,{gitsum:revID})
+    cb(null,revID)
   };
 
   grunt.registerMultiTask('versionify', 'Version stamp for your files with GIT/MD5', function() {
@@ -65,8 +103,9 @@ module.exports = function(grunt) {
       md5 : true,
       replaceDest : false
     });
-
     
+    taskCount = this.files.length;
+
     // Iterate over all specified file groups.
     this.files.forEach(function(f) {
       if(options.replaceDest) {
@@ -85,41 +124,54 @@ module.exports = function(grunt) {
           return true;
         }
       });
-      
+
       async.map(files, function( file, callback) {
 
           if (options.md5 && options.git) {
             grunt.log.debug(file + " # GIT and MD5 sums");
 
-            async.parallel([  function(cb) { getMD5Sum(file,cb); },
-                              function(cb) { getGitRevID(file,cb); } ], 
+            async.parallel({  md5sum : function(cb) { getMD5Sum(file,cb); },
+                              gitsum : function(cb) { getGitRevID(file,cb); } }, 
               function(err, data){
                 grunt.log.debug(file + " # GIT and MD5 sums", data);
-                callback(null,data);
+                var val = {};
+                val[file] = data;
+                callback(null,val);
               }
             )
           } else if(options.md5) {
-            getMD5Sum(file,callback);
+            grunt.log.debug(file + " # MD5 only");
+            getMD5Sum(file,function(err,data){
+              var val = {};
+              val[file] = {md5sum : data};
+              callback(err,val);
+            });
           } else if(options.git) {
-            getGitRevID(file,callback);
+            grunt.log.debug(file + " # GIT only");
+            getGitRevID(file,function(err,data){
+              var val = {};
+              val[file] = {gitsum : data};
+              callback(err,val);
+            });
           }
-
-        }, function(err,results){
-            console.log("results",results);
-
+        }, function(err,filesMeta){
             if( err ) {
-              console.log('A file failed to process');
+              console.log(err);
               done(false);
             } else {
-
-              console.log('All files have been processed successfully');
-              done();
+              async.each(filesMeta, function(file,cb){
+                  if(options.replaceDest) {
+                    file.dest = f.dest 
+                  }
+                  createVersionFile(file, cb);
+                },
+                function(err){
+                  if (err) grunt.fail.warn("Fatal error ", err);
+                  doneTask(done);
+                }
+              )
             }
         });
-
-
-
     });
   });
-
 };
