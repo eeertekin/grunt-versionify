@@ -9,27 +9,30 @@
 'use strict';
 
 var path = require('path'),
-    shell = require('shelljs/global');
+    shell = require('shelljs/global'),
+    async = require('async'),
+    crypto = require('crypto'),
+    fs = require('fs');
 
 
 module.exports = function(grunt) {
 
-  var getMD5Sum = function(buf, shortVersion) {
+  var getMD5Sum = function(filepath, cb) {
+    var md5 = crypto.createHash('md5');
 
-    try {
-      var md5 = require("MD5"),
-          md5sum = md5(grunt.file.read(buf));
-      if (shortVersion) {
-        return md5sum.substr(0,6);
-      }
-      return md5sum;
-    } catch(e) {
-      return "NA";
-    }
-    
+    var s = fs.ReadStream(filepath);
+    s.on('data', function(d) {
+      md5.update(d);
+    });
+
+    s.on('end', function() {
+      var md5sum = md5.digest('hex');
+      cb(null,{md5sum:md5sum})
+    });
   };
 
-  var getGitRevID = function(filepath, shortVersion) {
+
+  var getGitRevID = function(filepath, cb) {
     if (!which('git')) {
       grunt.fail.warn('This feature requires git');
     }
@@ -47,19 +50,22 @@ module.exports = function(grunt) {
         revID = revData[2];
       }
     }
-    if(shortVersion) {
-      revID = revID.substr(0,6);
-    }
-    return revID;
+
+    console.log(filepath + " getting GIT revID");
+    cb(null,{gitsum:revID})
   };
 
   grunt.registerMultiTask('versionify', 'Version stamp for your files with GIT/MD5', function() {
+    // Async task
+    var done = this.async();
+
     // Merge task-specific and/or target-specific options with these defaults.
     var options = this.options({
       git : false,
       md5 : true,
       replaceDest : false
     });
+
     
     // Iterate over all specified file groups.
     this.files.forEach(function(f) {
@@ -70,7 +76,7 @@ module.exports = function(grunt) {
       }
 
       // Check if file(s) are exists
-      var newFiles = f.src.filter(function(filepath) {
+      var files = f.src.filter(function(filepath) {
         // Warn on and remove invalid source files (if nonull was set).
         if (!grunt.file.exists(filepath)) {
           grunt.log.warn('Source file "' + filepath + '" not found.');
@@ -78,34 +84,40 @@ module.exports = function(grunt) {
         } else {
           return true;
         }
-      }).map(function(filepath) {
-        var directory = path.dirname(filepath),
-            file = path.basename(filepath),
-            fileExt = path.extname(file),
-            versionID = "";
-
-        if (options.md5) {
-          versionID += getMD5Sum(filepath, true);
-        }
-
-        if (options.git) {
-          versionID += getGitRevID(filepath,true);
-        }
-            
-        var newFileName = path.basename(file,fileExt) + "." + versionID + fileExt,
-            newFilePath = path.join( directory, newFileName );
-
-        grunt.file.copy(filepath, newFilePath );
-        grunt.log.ok(newFilePath + " created");
-
-        if(options.replaceDest) {
-          var replaceFile = grunt.file.read(f.dest);
-          var newDestFile = replaceFile.replace(filepath, newFilePath);
-          grunt.file.write(f.dest, newDestFile);
-          grunt.log.writeln('Versionified files replaced in '+ f.dest);
-        }
-
       });
+      
+      async.map(files, function( file, callback) {
+
+          if (options.md5 && options.git) {
+            grunt.log.debug(file + " # GIT and MD5 sums");
+
+            async.parallel([  function(cb) { getMD5Sum(file,cb); },
+                              function(cb) { getGitRevID(file,cb); } ], 
+              function(err, data){
+                grunt.log.debug(file + " # GIT and MD5 sums", data);
+                callback(null,data);
+              }
+            )
+          } else if(options.md5) {
+            getMD5Sum(file,callback);
+          } else if(options.git) {
+            getGitRevID(file,callback);
+          }
+
+        }, function(err,results){
+            console.log("results",results);
+
+            if( err ) {
+              console.log('A file failed to process');
+              done(false);
+            } else {
+
+              console.log('All files have been processed successfully');
+              done();
+            }
+        });
+
+
 
     });
   });
