@@ -100,3 +100,4 @@ Task submitted by [Ertugrul Emre Ertekin](http://github.com/eeertekin)
 ## Release History
 * 2014-04-22   v0.1.0   First Release with Git, MD5 and destination replace features
 * 2014-04-22   v0.1.3   Rewritten with async.js. Native crypto module used on MD5
+* 2014-04-22   v0.1.4   Status messages updated
