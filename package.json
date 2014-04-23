@@ -45,7 +45,6 @@
     "gruntplugin"
   ],
   "dependencies": {
-    "shelljs": "^0.2.6",
     "async": "^0.7.0"
   }
 }

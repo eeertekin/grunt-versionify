@@ -9,7 +9,6 @@
 'use strict';
 
 var path = require('path'),
-    shell = require('shelljs/global'),
     async = require('async'),
     crypto = require('crypto'),
     fs = require('fs');
@@ -72,25 +71,23 @@ module.exports = function(grunt) {
 
 
   var getGitRevID = function(filepath, cb) {
-    if (!which('git')) {
-      grunt.fail.warn('This feature requires git');
-    }
+    var exec = require('child_process').exec;
 
-    var revID = '',
-        lsTree = exec('git ls-tree HEAD '+ filepath, {silent:true}).output,
-        revData = lsTree.split('\t');
-        if ( lsTree.indexOf("Not a git repository") != -1) {
-          grunt.fail.warn(lsTree);
+    var child = exec('git ls-tree HEAD '+ filepath,
+      function (err, output, stderr) {
+
+        if(stderr && ( stderr.indexOf('command not found') !== -1) ) {
+          grunt.fail.warn('This feature requires git');
+        } 
+        else if(stderr && stderr.indexOf('Not a git repository') !== -1) {
+          grunt.fail.warn(filepath +' is not in a git repository');
+        } 
+        else {
+          var gitRevID = output.split("\t")[0].split(" ")[2];
+          cb(err,gitRevID);
         }
-
-    if ( revData[0] ) {
-      revData = revData[0].split(' ');
-      if (revData[2]) {
-        revID = revData[2];
       }
-    }
-
-    cb(null,revID)
+    );
   };
 
   grunt.registerMultiTask('versionify', 'Version stamp for your files with GIT/MD5', function() {
