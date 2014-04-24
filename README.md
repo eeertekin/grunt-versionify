@@ -102,3 +102,5 @@ Task submitted by [Ertugrul Emre Ertekin](http://github.com/eeertekin)
 * 2014-04-22   v0.1.3   Rewritten with async.js. Native crypto module used on MD5
 * 2014-04-22   v0.1.4   Status messages updated
 * 2014-04-23   v0.1.5   shelljs dependency replaced with native child_process.
+* 2014-04-24   v0.1.6   Nodeunit tests added.
+* 2014-04-24   v0.1.7   Grunt's peerinvalid error fixed.
