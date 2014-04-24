@@ -18,7 +18,7 @@ module.exports = function(grunt) {
   var taskCount;
   
   var doneTask = function(cb) {
-    if(!--taskCount) cb();
+    if(!--taskCount) { cb(); }
   };
 
   var createVersionFile = function(fileMeta, cb) {
@@ -48,7 +48,7 @@ module.exports = function(grunt) {
         var replaceFile = grunt.file.read(fileMeta.dest);
         var newDestFile = replaceFile.replace(filepath, newFilePath);
         grunt.file.write(fileMeta.dest, newDestFile);
-        status += ", "+ fileMeta.dest + " updated"
+        status += ", "+ fileMeta.dest + " updated";
     }
     grunt.log.ok(status);
 
@@ -65,7 +65,7 @@ module.exports = function(grunt) {
 
     s.on('end', function() {
       var md5sum = md5.digest('hex');
-      cb(null,md5sum)
+      cb(null,md5sum);
     });
   };
 
@@ -135,7 +135,7 @@ module.exports = function(grunt) {
                 val[file] = data;
                 callback(null,val);
               }
-            )
+            );
           } else if(options.md5) {
             grunt.log.debug(file + " # MD5 only");
             getMD5Sum(file,function(err,data){
@@ -158,15 +158,15 @@ module.exports = function(grunt) {
             } else {
               async.each(filesMeta, function(file,cb){
                   if(options.replaceDest) {
-                    file.dest = f.dest 
+                    file.dest = f.dest;
                   }
                   createVersionFile(file, cb);
                 },
                 function(err){
-                  if (err) grunt.fail.warn("Fatal error ", err);
+                  if (err) { grunt.fail.warn("Fatal error ", err); }
                   doneTask(done);
                 }
-              )
+              );
             }
         });
     });
