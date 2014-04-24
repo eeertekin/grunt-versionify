@@ -1,8 +1,8 @@
-# grunt-versionify
+# grunt-versionify [![Build Status](http://img.shields.io/travis/eeertekin/grunt-versionify.svg?branch=master&style=flat)](https://travis-ci.org/eeertekin/grunt-versionify)
 
 > Version stamp for your files with GIT/MD5
 
-[![Build Status](http://img.shields.io/travis/eeertekin/grunt-versionify.svg?branch=master&style=flat)](https://travis-ci.org/eeertekin/grunt-versionify)
+
 
 ## Getting Started
 This plugin requires Grunt `~0.4.4`
