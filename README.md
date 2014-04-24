@@ -2,8 +2,7 @@
 
 > Version stamp for your files with GIT/MD5
 
-
-
+[![NPM](https://nodei.co/npm/grunt-versionify.png?compact=true)](https://nodei.co/npm/grunt-versionify/)
 ## Getting Started
 This plugin requires Grunt `~0.4.0`
 
