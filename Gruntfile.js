@@ -25,17 +25,41 @@ module.exports = function(grunt) {
 
     // Before generating any new files, remove any previously-created files.
     clean: {
-      tests: ['tmp'],
+      tests: ['test/fixtures/123.*','test/fixtures/testing.*'],
     },
 
     // Configuration to be run (and then tested).
     versionify: {
       default: {
+        options: {},
+        files: {
+          'test/expected/destinationFile': ['test/fixtures/testing', 'test/fixtures/123']
+        },
+      },
+      gitOnly: {
         options: {
-          replaceDest : false
+          md5 : false,
+          git : true
         },
         files: {
-          'tmp/default_options': ['test/fixtures/testing', 'test/fixtures/123']
+          'test/expected/destinationFile': ['test/fixtures/testing', 'test/fixtures/123']
+        },
+      },
+      md5WithGit: {
+        options: {
+          md5 : true,
+          git : true
+        },
+        files: {
+          'test/expected/destinationFile': ['test/fixtures/testing', 'test/fixtures/123']
+        },
+      },
+      replaceTheFile: {
+        options: {
+          replaceDest: true
+        },
+        files: {
+          'test/expected/destinationFile': ['test/fixtures/testing', 'test/fixtures/123']
         },
       }
     },
