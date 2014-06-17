@@ -105,3 +105,4 @@ Task submitted by [Ertugrul Emre Ertekin](http://github.com/eeertekin)
 * 2014-04-23   v0.1.5   shelljs dependency replaced with native child_process.
 * 2014-04-24   v0.1.6   Nodeunit tests added.
 * 2014-04-24   v0.1.7   Grunt's peerinvalid error fixed.
+* 2014-06-17   v0.1.8   Grunt version changed to ~0.4.4
