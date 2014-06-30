@@ -106,3 +106,4 @@ Task submitted by [Ertugrul Emre Ertekin](http://github.com/eeertekin)
 * 2014-04-24   v0.1.6   Nodeunit tests added.
 * 2014-04-24   v0.1.7   Grunt's peerinvalid error fixed.
 * 2014-06-17   v0.1.8   Grunt version changed to ~0.4.4
+* 2014-06-30   v0.1.9   replaceDest : 'smart' option added.

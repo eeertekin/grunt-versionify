@@ -61,6 +61,14 @@ module.exports = function(grunt) {
         files: {
           'test/expected/destinationFile': ['test/fixtures/testing', 'test/fixtures/123']
         },
+      },
+      smartReplaceTheFile: {
+        options: {
+          replaceDest : 'smart'
+        },
+        files: {
+          'test/expected/destinationSmartFile': ['test/fixtures/testing', 'test/fixtures/123']
+        },
       }
     },
 

@@ -46,7 +46,14 @@ module.exports = function(grunt) {
 
     if(fileMeta.dest) {
         var replaceFile = grunt.file.read(fileMeta.dest);
-        var newDestFile = replaceFile.replace(filepath, newFilePath);
+        var filePattern = filepath;
+
+        if(fileMeta.smartReplace) {
+          filePattern = new RegExp(path.join( directory, path.basename(file,fileExt) ) + "(.*)" +fileExt ,'i');
+        }
+
+        var newDestFile = replaceFile.replace(filePattern, newFilePath);
+        
         grunt.file.write(fileMeta.dest, newDestFile);
         status += ", "+ fileMeta.dest + " updated";
     }
@@ -158,6 +165,9 @@ module.exports = function(grunt) {
             } else {
               async.each(filesMeta, function(file,cb){
                   if(options.replaceDest) {
+                    if(options.replaceDest === 'smart') {
+                      file.smartReplace = true;
+                    }
                     file.dest = f.dest;
                   }
                   createVersionFile(file, cb);
